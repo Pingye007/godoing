@@ -23,9 +23,15 @@ type Log struct {
 	Level string `toml:"level"`
 }
 
+type Server struct {
+	Ip   string `toml:"ip"`
+	Port int    `toml:"port"`
+}
+
 type Config struct {
 	DB        DB           `toml:"db"`
 	Log       Log          `toml:"log"`
+	Server    Server       `toml:"server"`
 	SysConfig SystemConfig `toml:"system_config"`
 }
 

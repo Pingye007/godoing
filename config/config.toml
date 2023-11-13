@@ -8,6 +8,11 @@ database_name = "godoing"
 server_addr = "localhost"
 port = 3306
 
+[server]
+ip = "127.0.0.1"
+port = 8081
+
+
 # log configuration
 [log]
 # debug,trace,info,warn,error,fatal,panic
