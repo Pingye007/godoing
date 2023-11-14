@@ -1,42 +1,27 @@
 package db
 
-import (
-	"github.com/Pingye007/godoing/log"
-	. "xorm.io/builder"
-)
-
 type User struct {
-	UserId   int
-	Password string
-	UserName string
-	Email    string
-	Role     int
+	UserId   int    `xorm:"pk not null unique autoincr"`
+	Password string `xorm:"not null"`
+	UserName string `xorm:"not null"`
+	Email    string `xorm:"null"`
+	Role     int    `xorm:"not null"`
+}
+
+func (user *User) TableName() string {
+	return tableName
 }
 
 const (
 	tableName = "gd_user"
 )
 
-func QueryUserById(id int) *User {
-	user := User{}
-
-	sql, args, err := Select("*").From(tableName).Where(Eq{"user_id": id}).ToSQL()
+func QueryUserById(id int) (*User, error) {
+	var user User
+	_, err := Engine.ID(id).Get(&user)
 	if err != nil {
-		log.Log.Errorln("compose sql to query user by id failed")
-		panic(err.Error())
+		return nil, err
 	}
 
-	result, err := Engine.Exec(sql, args)
-	if err != nil {
-		log.Log.Errorln("execute sql of  querying user by id failed")
-		return nil
-	}
-
-	return &user
-}
-
-func QueryAllUserById(ids ...int) []*User {
-	users := make([]*User, 0)
-
-	return users
+	return &user, nil
 }

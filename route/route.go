@@ -6,10 +6,9 @@ import (
 	"github.com/Pingye007/godoing/service"
 )
 
-const (
-	GetUser = "db/getUser"
-)
-
 func InitRoutes() {
-	http.HandleFunc("/api/v1/"+GetUser, service.UserService)
+	http.HandleFunc("/api/"+service.ApiVersion+"/"+service.ApiGet, service.Get)
+	http.HandleFunc("/api/"+service.ApiVersion+"/"+service.ApiAdd, service.Add)
+	http.HandleFunc("/api/"+service.ApiVersion+"/"+service.ApiUpdate, service.Update)
+	http.HandleFunc("/api/"+service.ApiVersion+"/"+service.ApiDelete, service.Delete)
 }
