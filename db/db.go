@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"xorm.io/xorm/names"
 
 	"github.com/Pingye007/godoing/config"
 	"github.com/Pingye007/godoing/log"
@@ -42,6 +43,8 @@ func connectDB() {
 		eg.Close()
 		panic(err.Error())
 	}
+
+	eg.SetMapper(names.SnakeMapper{})
 
 	log.Log.Infof("open database %s successful \n", config.Cfg.DB.DatabaseName)
 	Engine = eg
