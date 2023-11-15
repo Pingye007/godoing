@@ -2,8 +2,10 @@ package db
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
+
 	"xorm.io/xorm/names"
 
 	"github.com/Pingye007/godoing/config"
@@ -21,13 +23,13 @@ const (
 )
 
 func connectDB() {
-	settings := fmt.Sprintf("%s:%s@tcp(%s:%d)%s?charset=utf8mb4,utf8&parseTime=true&loc=%s",
+	settings := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4,utf8&parseTime=true&loc=%s",
 		config.Cfg.DB.User,
 		config.Cfg.DB.Password,
 		config.Cfg.DB.ServerAddr,
 		config.Cfg.DB.Port,
 		config.Cfg.DB.DatabaseName,
-		"Asia/Shanghai")
+		url.QueryEscape("Asia/Shanghai"))
 
 	// Create a new engine which seals database/sql and all related functions
 	eg, err := xorm.NewEngine(strings.ToLower(config.Cfg.DB.SqlType), settings)
@@ -61,8 +63,9 @@ func initTables(table ...string) {
 	if tableNum == 0 {
 		return
 	}
-	tables := make([]any, len(table))
+	tables := make([]any, 0)
 	for _, t := range table {
+		log.Log.Infoln("table:", t)
 		if exist, err := Engine.IsTableExist(t); err != nil {
 			log.Log.Errorf("check table %s existence failed \n", t)
 			panic(err.Error())
@@ -78,12 +81,14 @@ func initTables(table ...string) {
 		}
 	}
 
-	err := Engine.CreateTables(tables)
-	if err != nil {
-		log.Log.Errorln("create tables failed")
-		panic(err.Error())
+	if len(tables) > 0 {
+		log.Log.Infoln("need create tables")
+		err := Engine.CreateTables(tables)
+		if err != nil {
+			log.Log.Errorln("create tables failed")
+			panic(err.Error())
+		}
 	}
-
 }
 
 func init() {
