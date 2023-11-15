@@ -1,94 +1,60 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/Pingye007/godoing/db"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/Pingye007/godoing/config"
 	"github.com/Pingye007/godoing/log"
 )
 
-type GoRequest struct {
-}
-
-type GoResponse struct {
-	Data any    `json:"data"`
-	Code int    `json:"code"`
-	Msg  string `json:"message"`
-}
-
-func InternalError(rw http.ResponseWriter, msg string) {
-	res := GoResponse{
-		Data: nil,
-		Code: http.StatusInternalServerError,
-		Msg:  msg,
-	}
-
-	b, err := json.Marshal(&res)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = rw.Write(b)
-	if err != nil {
-		panic(err.Error())
-	}
-}
-
-func Success(rw http.ResponseWriter, data any) {
-	res := GoResponse{
-		Data: data,
-		Code: http.StatusOK,
-		Msg:  "Success",
-	}
-
-	b, err := json.Marshal(&res)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = rw.Write(b)
-	if err != nil {
-		panic(err.Error())
-	}
-}
-
-func Failure(rw http.ResponseWriter) {
-	InternalError(rw, "Failure")
-}
-
 func DatabaseService(rw http.ResponseWriter, req *http.Request) {
 
 }
 
-func UserService(rw http.ResponseWriter, req *http.Request) {
-	key := "user_id"
-	err := req.ParseForm()
-	if err != nil {
-		log.Log.Errorf("parse %s form failed \n", req.RequestURI)
-		InternalError(rw, "Form data error")
+func ApiService(rw http.ResponseWriter, req *http.Request) {
+	log.Log.Infoln("route url:", req.URL.Path)
+	idx := strings.LastIndexAny(req.URL.Path, "/")
+	if idx == -1 {
+		log.Log.Infoln("parse request url failed")
+		Failure(rw, "Illegal URL")
+		return
+	} else if idx == len(req.URL.Path)-1 {
+		log.Log.Infoln("invalid url")
+		Failure(rw, "Invalid URL")
 		return
 	}
 
-	// Do the service
-	idStr := req.Form.Get(key)
-	id, err := strconv.Atoi(idStr)
+	target := req.URL.Path[idx+len("/"):]
+	goReq, err := ParseRequest(req)
 	if err != nil {
-		InternalError(rw, "Id conversion error")
+		log.Log.Infoln("parse body data to request failed")
+		Failure(rw, "Wrong Format Body Data")
 		return
 	}
 
-	user, err := db.QueryUserById(id)
-	if err != nil {
-		InternalError(rw, err.Error())
+	log.Log.Infoln("request:", goReq.String())
+
+	var goRes *GoResponse
+	switch target {
+	case UrlUser:
+		goRes, err = UserService(goReq)
+	case UrlDoing:
+		goRes, err = DoingService(goReq)
+	case UrlResult:
+		goRes, err = ResultService(goReq)
+	default:
+		Failure(rw, "Wrong URL Target")
 		return
 	}
 
-	Success(rw, user)
+	if err != nil {
+		Failure(rw, "Service Error")
+		return
+	}
+
+	Success(rw, goRes)
 }
 
 func StartServer() {

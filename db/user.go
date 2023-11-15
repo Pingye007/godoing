@@ -1,31 +1,18 @@
 package db
 
-import (
-	. "xorm.io/builder"
-)
-
 type User struct {
-	UserId   int `xorm:"pk"`
-	Password string
-	UserName string
-	Email    string
-	Role     int
+	UserId   int    `xorm:"pk not null unique autoincr"`
+	Password string `xorm:"not null"`
+	UserName string `xorm:"not null"`
+	Email    string `xorm:"null"`
+	Role     int    `xorm:"not null"`
 }
 
 func (user *User) TableName() string {
-	return tableName
+	return TableUser
 }
 
-const (
-	tableName = "gd_user"
-)
-
 func QueryUserById(id int) (*User, error) {
-	var user User
-	_, err := Engine.ID(id).Get(&user)
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	user, err := queryById(id, new(User))
+	return user.(*User), err
 }

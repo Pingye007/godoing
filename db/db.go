@@ -14,6 +14,12 @@ import (
 
 var Engine *xorm.Engine
 
+const (
+	TableUser   = "gd_user"
+	TableDoing  = "gd_doing"
+	TableResult = "gd_result"
+)
+
 func connectDB() {
 	settings := fmt.Sprintf("%s:%s@tcp(%s:%d)%s?charset=utf8mb4,utf8&parseTime=true&loc=%s",
 		config.Cfg.DB.User,
@@ -50,6 +56,37 @@ func connectDB() {
 	Engine = eg
 }
 
+func initTables(table ...string) {
+	tableNum := len(table)
+	if tableNum == 0 {
+		return
+	}
+	tables := make([]any, len(table))
+	for _, t := range table {
+		if exist, err := Engine.IsTableExist(t); err != nil {
+			log.Log.Errorf("check table %s existence failed \n", t)
+			panic(err.Error())
+		} else if !exist {
+			switch t {
+			case TableUser:
+				tables = append(tables, new(User))
+			case TableDoing:
+				tables = append(tables, new(Doing))
+			case TableResult:
+				tables = append(tables, new(Result))
+			}
+		}
+	}
+
+	err := Engine.CreateTables(tables)
+	if err != nil {
+		log.Log.Errorln("create tables failed")
+		panic(err.Error())
+	}
+
+}
+
 func init() {
 	connectDB()
+	initTables(TableUser, TableDoing, TableResult)
 }
